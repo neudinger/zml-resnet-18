@@ -1,0 +1,70 @@
+module(
+    name = "zml-resnet-18",
+    version = "0.1.0",
+)
+
+bazel_dep(name = "rules_zig", version = "0.12.3")
+bazel_dep(name = "zml", version = "0.0.0")
+bazel_dep(name = "rules_cc", version = "0.2.16")
+bazel_dep(name = "toolchains_llvm_bootstrapped", version = "0.5.5")
+bazel_dep(name = "rules_python", version = "1.8.4")
+
+git_override(
+    module_name = "rules_zig",
+    commit = "7b205b78fb21e11efe5adcc9ec1c37fa5852dc77",
+    remote = "https://github.com/zml/rules_zig.git",
+)
+
+register_toolchains("@rules_zig//zig/target:all")
+
+### Zig toolchain
+zig = use_extension("@rules_zig//zig:extensions.bzl", "zig")
+zig.index(file = "//bazel:zig_index.json")
+zig.toolchain(zig_version = "0.16.0-dev.2722+f16eb18ce")
+zig.mirrors(urls = [
+    "https://pkg.machengine.org/zig",
+    "https://zigmirror.hryx.net/zig",
+    "https://zig.linus.dev/zig",
+    "https://zig.squirl.dev",
+    "https://zig.florent.dev",
+    "https://zig.mirror.mschae23.de/zig",
+    "https://zigmirror.meox.dev",
+    "https://ziglang.freetls.fastly.net",
+    "https://zig.tilok.dev",
+    "https://zig-mirror.tsimnet.eu/zig",
+    "https://zig.karearl.com/zig",
+    "https://pkg.earth/zig",
+    "https://fs.liujiacai.net/zigbuilds",
+    "https://ziglang.org/builds/",
+])
+use_repo(zig, "zig_toolchains")
+
+register_toolchains("@zig_toolchains//:all")
+
+###
+
+git_override(
+    module_name = "zml",
+    commit = "4ecdd92cb094b26bac96d6281ff91e433c0bc33c",
+    remote = "https://github.com/zml/zml.git",
+)
+
+non_module_deps = use_extension("@zml//:third_party/non_module_deps.bzl", "non_module_deps")
+use_repo(non_module_deps, "translate-c", "stb")
+
+zls = use_extension("@zml//third_party/zls:zls_toolchain.bzl", "zls_toolchains")
+use_repo(zls, "zls_toolchains")
+
+register_toolchains("@zls_toolchains//:all")
+
+# Python toolchain to be able to run python bazel target
+# bazel run @zml//tools/hf:hf
+python = use_extension("@rules_python//python/extensions:python.bzl", "python")
+python.toolchain(python_version = "3.12")
+use_repo(python, "python_versions")
+
+### LLVM Bootstrapped toolchains
+register_toolchains(
+    "@toolchains_llvm_bootstrapped//toolchain:all",
+)
+###

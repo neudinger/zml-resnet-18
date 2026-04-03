@@ -1,0 +1,9 @@
+load("@zml//third_party/zls:zls_completion.bzl", "zls_completion")
+
+zls_completion(
+    name = "completion",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//resnet-18",
+    ],
+)
